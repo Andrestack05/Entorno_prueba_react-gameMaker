@@ -19,7 +19,7 @@ function GameEmbed({ userId }: GameEmbedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // --- 1️⃣ Detecta si el usuario está en móvil y si la pantalla está en orientación vertical ---
+  // ---  Detecta si el usuario está en móvil y si la pantalla está en orientación vertical ---
   useEffect(() => {
     const checkDevice = () => {
       // Expresión regular que detecta navegadores móviles
@@ -39,7 +39,7 @@ function GameEmbed({ userId }: GameEmbedProps) {
     };
   }, []);
 
-  // --- 2️⃣ Calcula el "escala" del iframe según el tamaño de la ventana ---
+  // ---  Calcula el "escala" del iframe según el tamaño de la ventana ---
   const getScale = () => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -56,7 +56,7 @@ function GameEmbed({ userId }: GameEmbedProps) {
     return scale;
   };
 
-  // --- 3️⃣ Actualiza manualmente el tamaño del contenedor e iframe ---
+  // --- Actualiza manualmente el tamaño del contenedor e iframe ---
   const updateScale = () => {
     const container = containerRef.current;
     const iframe = iframeRef.current;
@@ -86,7 +86,7 @@ function GameEmbed({ userId }: GameEmbedProps) {
     iframe.style.display = 'block';
   };
 
-  // --- 4️⃣ Bloquea el scroll de la página y recalcula escala en cambios ---
+  // --- Bloquea el scroll de la página y recalcula escala en cambios ---
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
@@ -104,7 +104,7 @@ function GameEmbed({ userId }: GameEmbedProps) {
     };
   }, [isFullscreen, isMobile, isPortrait]);
 
-  // --- 5️⃣ Control del modo pantalla completa ---
+  // --- Control del modo pantalla completa ---
   const toggleFullscreen = async () => {
     const el = document.documentElement;
     try {
@@ -133,12 +133,12 @@ function GameEmbed({ userId }: GameEmbedProps) {
     };
   }, []);
 
-  // --- 7️⃣ URL del juego ---
+  // ---  URL del juego ---
   // Aquí se pasa el ID del usuario como parámetro (uid), que el juego puede leer desde el query string.
   // Ejemplo: /GAME2/index.html?uid=123
   const gameUrl = `/GAME2/index.html?uid=${userId}`;
 
-  // --- 8️⃣ Renderizado del componente ---
+  // ---  Renderizado del componente ---
   return (
     <div
       style={{
@@ -166,7 +166,7 @@ function GameEmbed({ userId }: GameEmbedProps) {
         </div>
       )}
 
-      {/* 🔸 Mensaje de rotación solo para móviles en vertical */}
+      {/*  Mensaje de rotación solo para móviles en vertical */}
       {isMobile && isPortrait && !isFullscreen && (
         <div
           style={{
@@ -187,7 +187,7 @@ function GameEmbed({ userId }: GameEmbedProps) {
         </div>
       )}
 
-      {/* 🔹 Contenedor principal del juego */}
+      {/*  Contenedor principal del juego */}
       <div
         ref={containerRef}
         style={{
@@ -201,7 +201,7 @@ function GameEmbed({ userId }: GameEmbedProps) {
           position: 'relative',
         }}
       >
-        {/* 🔸 Iframe del juego GameMaker */}
+        {/*  Iframe del juego GameMaker */}
         <iframe
           ref={iframeRef}
           src={gameUrl} // ← aquí se pasa el userId al juego
