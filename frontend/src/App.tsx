@@ -1,250 +1,187 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from 'react';
+import GameEmbed from './components/GameEmbed';
 
 function App() {
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const [showRotateOverlay, setShowRotateOverlay] = useState(false);
+  // manejar userId como number | '' para evitar comparaciones raras
+  const [userId, setUserId] = useState<number | ''>('');
+  const [gameStarted, setGameStarted] = useState(false);
 
-  // Resolución nativa real del viewport del juego
-  const nativeWidth = 1440;
-  const nativeHeight = 780;
-
-  // Token (cámbialo por el token real)
-  const tokenRef = useRef<string>("token_de_prueba_123");
-
-  // Ajusta la altura del contenedor según el ancho disponible (mantiene proporción nativa)
-  const updateContainerSize = () => {
-    const container = containerRef.current;
-    if (!container) return;
-    const cw = Math.min(container.parentElement?.clientWidth ?? window.innerWidth, 1200); // límite visual
-    container.style.width = `${cw}px`;
-    const height = Math.round((cw * nativeHeight) / nativeWidth);
-    container.style.height = `${height}px`;
-  };
-
-  // Escalar el wrapper que contiene el iframe para que encaje exactamente sin scroll
-  const updateScale = () => {
-    const container = containerRef.current;
-    const wrapper = wrapperRef.current;
-    if (!container || !wrapper) return;
-    const cw = container.clientWidth;
-    const scale = cw / nativeWidth; // solo escala por ancho porque altura ya se ajustó a la proporción
-    wrapper.style.transform = `scale(${scale})`;
-    wrapper.style.transformOrigin = "top left";
-    wrapper.style.left = `0px`;
-    wrapper.style.top = `0px`;
-  };
-
-  // Función para enviar AUTH de forma controlada
-  const sendAuth = () => {
-    const iframe = iframeRef.current;
-    if (!iframe?.contentWindow) {
-      console.warn("Iframe no disponible para enviar AUTH");
-      return;
-    }
-    const msg = { type: "AUTH", token: tokenRef.current };
-    // usar '*' en dev; en producción reemplazar por origin seguro
-    iframe.contentWindow.postMessage(msg, "*");
-    console.log("➡️ Enviado AUTH al juego:", msg);
-  };
-
-  // Escucha mensajes del iframe (handshake + datos)
-  useEffect(() => {
-    const handler = (event: MessageEvent) => {
-      const iframe = iframeRef.current;
-      if (!iframe) return;
-      // Asegurar que el mensaje venga del iframe correcto
-      if (event.source !== iframe.contentWindow) return;
-
-      console.log("📩 Mensaje recibido desde iframe:", event.data);
-
-      const data = event.data;
-      if (!data || typeof data !== "object") return;
-
-      switch (data.type) {
-        case "READY":
-          // El juego indica que está listo para recibir el token
-          sendAuth();
-          break;
-        case "AUTH_ACK":
-          // El juego confirma recepción y puede enviar un id o token de vuelta
-          console.log("✅ AUTH_ACK recibido. id/token:", data.id ?? data.token ?? data);
-          break;
-        case "GAME_DATA":
-          console.log("🎮 GAME_DATA:", data.data);
-          break;
-        default:
-          console.log("Mensaje desconocido del juego:", data);
-      }
-    };
-
-    window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Enviar token cuando el iframe esté listo (fallback) — mantiene también el handshake por READY
-  useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
-    iframe.onload = () => {
-      console.log("🎮 Iframe onload; intento de envío AUTH (fallback)");
-      // Envío inmediato (fallback) + luego handshake READY/ACK si el juego lo implementa
-      sendAuth();
-      requestAnimationFrame(() => {
-        updateContainerSize();
-        updateScale();
-      });
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    // Inicializar tamaño y listeners
-    updateContainerSize();
-    updateScale();
-    const onResize = () => {
-      updateContainerSize();
-      updateScale();
-    };
-    window.addEventListener("resize", onResize);
-    window.addEventListener("orientationchange", onResize);
-    return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Detectar orientación / tamaño y mostrar overlay en móviles en vertical
-  useEffect(() => {
-    const check = () => {
-      const isMobileWidth = window.innerWidth <= 768;
-      const isPortrait = window.innerHeight > window.innerWidth;
-      setShowRotateOverlay(isMobileWidth && isPortrait);
-    };
-
-    check();
-    window.addEventListener("resize", check);
-    window.addEventListener("orientationchange", check);
-    return () => {
-      window.removeEventListener("resize", check);
-      window.removeEventListener("orientationchange", check);
-    };
-  }, []);
-
-  // Intentar fullscreen + bloqueo de orientación (requiere gesto del usuario)
-  const enterFullscreenAndLock = async () => {
-    try {
-      const el = containerRef.current || document.documentElement;
-      if (el.requestFullscreen) await el.requestFullscreen();
-      // @ts-ignore
-      if (screen.orientation && screen.orientation.lock) {
-        // @ts-ignore
-        await screen.orientation.lock("landscape");
-      }
-    } catch (err) {
-      console.warn("No se pudo bloquear orientación / abrir fullscreen:", err);
+  const handleStartGame = () => {
+    if (userId !== '' && userId > 0) {
+      setGameStarted(true);
+    } else {
+      alert('Por favor ingresa un ID válido');
     }
   };
+
+  const handleReset = () => {
+    setGameStarted(false);
+    setUserId('');
+  };
+
+  if (gameStarted) {
+    return (
+      <div style={styles.playWrap}>
+        <GameEmbed userId={userId} />
+        <div style={styles.resetContainer}>
+          <button onClick={handleReset} style={styles.resetButton}>
+            🔄 Reiniciar con otro usuario
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ width: "100%", minHeight: "100vh", background: "#222", boxSizing: "border-box", padding: 12, overflowX: "hidden" }}>
-      <h1 style={{ color: "white", textAlign: "center" }}>Demo React + GameMaker + FastAPI</h1>
-
-      <div
-        ref={containerRef}
-        style={{
-          width: "100%", // se ajusta en JS a un ancho max (ve updateContainerSize)
-          maxWidth: "1200px",
-          background: "#000",
-          position: "relative",
-          overflow: "hidden", // evita barras de scroll en el host
-          margin: "0 auto",
-          boxSizing: "border-box",
-        }}
-      >
-        {/* wrapper con tamaño nativo y transform scale */}
-        <div
-          ref={wrapperRef}
-          style={{
-            position: "absolute",
-            width: nativeWidth,
-            height: nativeHeight,
-            left: 0,
-            top: 0,
-            overflow: "hidden",
-          }}
-        >
-          <iframe
-            ref={iframeRef}
-            src="/NOSACQ-50-GAME/index.html"
-            title="NOSACQ-50"
-            style={{
-              width: nativeWidth,
-              height: nativeHeight,
-              border: "none",
-              display: "block",
-              background: "#000",
-            }}
-            allow="autoplay; fullscreen"
-            scrolling="no"
-          ></iframe>
+    <div style={styles.appWrap}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>🎮 NOSACQ-50</h1>
+        <h2 style={styles.subtitle}>Cuestionario de Seguridad Gamificado</h2>
+        
+        <div style={styles.infoBox}>
+          <h3 style={{marginTop:0}}>📋 Instrucciones:</h3>
+          <ul style={styles.list}>
+            <li>Ingresa el ID del usuario</li>
+            <li>Completa las 50 preguntas en el juego</li>
+            <li>Los resultados se enviarán automáticamente</li>
+          </ul>
         </div>
 
-        {showRotateOverlay && (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 12,
-              background: "rgba(0,0,0,0.7)",
-              color: "#fff",
-              padding: 16,
-              textAlign: "center",
-              zIndex: 50,
-              flexDirection: "column",
-            }}
-          >
-            <div style={{ fontSize: 18, fontWeight: 600 }}>Gira tu dispositivo a horizontal</div>
-            <div style={{ fontSize: 13, opacity: 0.9 }}>Para una mejor experiencia, usa la pantalla en horizontal.</div>
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <button
-                onClick={() => enterFullscreenAndLock()}
-                style={{
-                  padding: "10px 16px",
-                  borderRadius: 6,
-                  border: "none",
-                  background: "#1a73e8",
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                Abrir en pantalla completa
-              </button>
-              <button
-                onClick={() => setShowRotateOverlay(false)}
-                style={{
-                  padding: "10px 16px",
-                  borderRadius: 6,
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  background: "transparent",
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                Continuar igualmente
-              </button>
-            </div>
-          </div>
-        )}
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>ID del Usuario:</label>
+          <input
+            type="number"
+            value={userId === '' ? '' : String(userId)}
+            onChange={(e) => setUserId(e.target.value === '' ? '' : Number(e.target.value))}
+            placeholder="Ej: 12345"
+            style={styles.input}
+            onKeyPress={(e) => e.key === 'Enter' && handleStartGame()}
+          />
+        </div>
+
+        <button onClick={handleStartGame} style={styles.button}>
+          🚀 Iniciar Juego
+        </button>
       </div>
     </div>
   );
 }
+
+const styles: any = {
+  appWrap: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '40px',
+    boxSizing: 'border-box',
+    backgroundImage:
+      'radial-gradient( circle at 10% 20%, rgba(255,255,255,0.02), transparent 10% ),' +
+      'linear-gradient(135deg, #0f1724 0%, #0b1220 50%, #071025 100%)',
+    backgroundAttachment: 'fixed'
+  },
+  // layout para cuando el juego está iniciado: columna y centrado
+  playWrap: {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 20,
+    padding: '40px',
+    boxSizing: 'border-box',
+    backgroundImage:
+      'radial-gradient( circle at 10% 20%, rgba(255,255,255,0.02), transparent 10% ),' +
+      'linear-gradient(135deg, #0f1724 0%, #0b1220 50%, #071025 100%)',
+  },
+  card: {
+    width: '100%',
+    maxWidth: '560px',
+    padding: '34px',
+    borderRadius: '16px',
+    boxShadow: '0 12px 40px rgba(2,6,23,0.7), inset 0 1px 0 rgba(255,255,255,0.02)',
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02))',
+    border: '1px solid rgba(255,255,255,0.04)',
+    color: '#e6eef8',
+    fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+    textAlign: 'center'
+  },
+  title: {
+    color: '#ffd166',
+    fontSize: '34px',
+    margin: '0 0 6px 0',
+    textShadow: '0 2px 8px rgba(0,0,0,0.6)'
+  },
+  subtitle: {
+    color: '#cbd7ee',
+    fontSize: '15px',
+    margin: '0 0 20px 0',
+    fontWeight: 500
+  },
+  infoBox: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    padding: '14px',
+    borderRadius: '10px',
+    marginBottom: '22px',
+    border: '1px solid rgba(255,255,255,0.02)',
+    textAlign: 'left'
+  },
+  list: {
+    margin: '10px 0 0 18px',
+    padding: 0,
+    color: '#dbe8ff'
+  },
+  inputGroup: {
+    marginBottom: '20px',
+    textAlign: 'left'
+  },
+  label: {
+    display: 'block',
+    marginBottom: '8px',
+    fontWeight: 600,
+    color: '#e6eef8'
+  },
+  input: {
+    width: '100%',
+    padding: '12px 14px',
+    fontSize: '15px',
+    borderRadius: '10px',
+    border: '1px solid rgba(255,255,255,0.06)',
+    background: 'rgba(0,0,0,0.35)',
+    color: '#e6eef8',
+    outline: 'none',
+    boxSizing: 'border-box'
+  },
+  button: {
+    width: '100%',
+    padding: '14px',
+    fontSize: '16px',
+    fontWeight: 700,
+    color: '#081224',
+    background: 'linear-gradient(90deg, #ffd166 0%, #ff7a59 100%)',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    boxShadow: '0 8px 18px rgba(255,121,78,0.18), inset 0 -2px 0 rgba(0,0,0,0.08)'
+  },
+  resetContainer: {
+    width: '100%',
+    maxWidth: '960px',
+    display: 'flex',
+    justifyContent: 'center',
+    marginTop: 8
+  },
+  resetButton: {
+    padding: '12px 30px',
+    fontSize: '16px',
+    fontWeight: '700',
+    color: '#081224',
+    backgroundColor: '#ffd166',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    boxShadow: '0 8px 18px rgba(0,0,0,0.12)'
+  }
+};
 
 export default App;
