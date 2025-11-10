@@ -1,140 +1,118 @@
 import { useState, useEffect, useRef } from 'react';
 
+// Interfaz del componente: recibe un userId (token o ID del usuario que se pasa desde React)
 interface GameEmbedProps {
   userId: number | '';
 }
 
+// Tamaño nativo del juego exportado desde GameMaker
+const nativeWidth = 1440;
+const nativeHeight = 780;
+
 function GameEmbed({ userId }: GameEmbedProps) {
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isPortrait, setIsPortrait] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  // Estados del componente
+  const [isFullscreen, setIsFullscreen] = useState(false); // controla si está en pantalla completa
+  const [isPortrait, setIsPortrait] = useState(false);     // controla si el dispositivo está en orientación vertical
+  const [isMobile, setIsMobile] = useState(false);         // detecta si el usuario está en un dispositivo móvil
 
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  // Referencias al contenedor y al iframe (para manipularlos directamente)
   const containerRef = useRef<HTMLDivElement>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const fullscreenContainerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const nativeWidth = 1440;
-  const nativeHeight = 780;
-
-  const originalFullscreenContainerCss = useRef<string>('');
-
-  useEffect(() => {
-    if (fullscreenContainerRef.current) {
-      originalFullscreenContainerCss.current = fullscreenContainerRef.current.style.cssText || '';
-    }
-  }, []);
-
+  // --- 1️⃣ Detecta si el usuario está en móvil y si la pantalla está en orientación vertical ---
   useEffect(() => {
     const checkDevice = () => {
+      // Expresión regular que detecta navegadores móviles
       const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       setIsMobile(mobile);
-      setIsPortrait(window.innerHeight > window.innerWidth);
+      setIsPortrait(window.innerHeight > window.innerWidth); // true si el dispositivo está en modo vertical
     };
     checkDevice();
+
+    // Actualiza cuando el usuario cambia el tamaño o la orientación
     window.addEventListener('resize', checkDevice);
     window.addEventListener('orientationchange', checkDevice);
+
     return () => {
       window.removeEventListener('resize', checkDevice);
       window.removeEventListener('orientationchange', checkDevice);
     };
   }, []);
 
-  const updateScale = () => {
-    const container = containerRef.current;
-    const wrapper = wrapperRef.current;
-    const iframe = iframeRef.current;
-    const fullEl = fullscreenContainerRef.current;
-    if (!container || !wrapper || !iframe || !fullEl) return;
-
+  // --- 2️⃣ Calcula el "escala" del iframe según el tamaño de la ventana ---
+  const getScale = () => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    // Escala para que el contenido entre completo en viewport (igual que fullscreen)
-    // Usamos el min entre vw/nativeWidth y vh/nativeHeight:
-    const scale = Math.min(vw / nativeWidth, vh / nativeHeight);
-    const scaledW = Math.round(nativeWidth * scale);
-    const scaledH = Math.round(nativeHeight * scale);
+    // Calcula la escala para mantener proporción del juego
+    let scale = Math.min((vw - 8) / nativeWidth, (vh - 8) / nativeHeight, 1);
 
-    // Ajustamos estilos tanto para fullscreen como para modo normal con el mismo tamaño escalado
-    fullEl.style.width = '100vw';
-    fullEl.style.height = '100vh';
-    fullEl.style.padding = '0';
-    fullEl.style.margin = '0';
-    fullEl.style.boxSizing = 'border-box';
-    fullEl.style.borderRadius = '0';
-    fullEl.style.overflow = 'hidden';
-    fullEl.style.background = '#000';
-    fullEl.style.display = 'flex';
-    fullEl.style.alignItems = 'center';
-    fullEl.style.justifyContent = 'center';
-    fullEl.style.position = 'relative';
+    // Ajustes específicos para pantallas pequeñas (breakpoints)
+    if (vw < 400) scale = Math.min(scale, 0.28);
+    else if (vw < 500) scale = Math.min(scale, 0.38);
+    else if (vw < 600) scale = Math.min(scale, 0.48);
+    else if (vw < 700) scale = Math.min(scale, 0.58);
+    else if (vw < 900) scale = Math.min(scale, 0.68);
 
-    container.style.width = `${scaledW}px`;
-    container.style.height = `${scaledH}px`;
-    container.style.margin = '0 auto';
-    container.style.borderRadius = isFullscreen ? '0' : '12px';
-    container.style.overflow = 'hidden';
+    return scale;
+  };
+
+  // --- 3️⃣ Actualiza manualmente el tamaño del contenedor e iframe ---
+  const updateScale = () => {
+    const container = containerRef.current;
+    const iframe = iframeRef.current;
+    if (!container || !iframe) return;
+
+    const scale = getScale();
+
+    // Contenedor del juego
+    container.style.width = `${nativeWidth * scale}px`;
+    container.style.height = `${nativeHeight * scale}px`;
+    container.style.maxWidth = '100vw';
+    container.style.maxHeight = '100vh';
     container.style.position = 'relative';
-    container.style.backgroundColor = '#000';
-    container.style.transform = 'none';
-    container.style.display = 'block';
+    container.style.overflow = 'hidden';
+    container.style.background = '#000';
 
-    wrapper.style.width = `${nativeWidth}px`;
-    wrapper.style.height = `${nativeHeight}px`;
-    wrapper.style.position = 'relative';
-    wrapper.style.top = '0';
-    wrapper.style.left = '0';
-    wrapper.style.transformOrigin = 'top left';
-    wrapper.style.transform = `scale(${scale})`;
-    wrapper.style.overflow = 'hidden';
-
+    // Iframe (juego embebido)
     iframe.style.width = `${nativeWidth}px`;
     iframe.style.height = `${nativeHeight}px`;
     iframe.style.position = 'absolute';
     iframe.style.top = '0';
     iframe.style.left = '0';
+    iframe.style.transform = `scale(${scale})`; // Se ajusta visualmente al tamaño
+    iframe.style.transformOrigin = 'top left';
     iframe.style.border = 'none';
-    iframe.style.transform = 'none';
-
-    // Restaurar estilos al contenedor fullscreen si no estamos en fullscreen real
-    if (!isFullscreen) {
-      fullEl.style.width = '100%';
-      fullEl.style.height = 'auto';
-      fullEl.style.padding = '12px';
-      fullEl.style.maxWidth = '1400px';
-      fullEl.style.margin = '0 auto';
-      fullEl.style.borderRadius = '12px';
-      fullEl.style.background = '#000';
-      fullEl.style.display = 'block';
-      fullEl.style.overflow = 'visible';
-      fullEl.style.position = 'relative';
-    }
+    iframe.style.background = '#000';
+    iframe.style.display = 'block';
   };
 
-  const requestLandscapeOrientation = async () => {
-    try {
-      if (screen.orientation && screen.orientation.lock) {
-        await screen.orientation.lock('landscape');
-      }
-    } catch (err) {
-      console.warn('No se pudo forzar orientación horizontal', err);
-    }
-  };
+  // --- 4️⃣ Bloquea el scroll de la página y recalcula escala en cambios ---
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 
+    updateScale();
+
+    window.addEventListener('resize', updateScale);
+    window.addEventListener('orientationchange', updateScale);
+
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      window.removeEventListener('orientationchange', updateScale);
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isFullscreen, isMobile, isPortrait]);
+
+  // --- 5️⃣ Control del modo pantalla completa ---
   const toggleFullscreen = async () => {
-    const element = fullscreenContainerRef.current;
-    if (!element) return;
-
+    const el = document.documentElement;
     try {
       if (!isFullscreen) {
-        if (element.requestFullscreen) await element.requestFullscreen();
-        await requestLandscapeOrientation();
+        if (el.requestFullscreen) await el.requestFullscreen(); // activa fullscreen
         setIsFullscreen(true);
       } else {
-        if (document.exitFullscreen) await document.exitFullscreen();
-        if (screen.orientation && screen.orientation.unlock) {
-          screen.orientation.unlock();
-        }
+        if (document.exitFullscreen) await document.exitFullscreen(); // sale de fullscreen
         setIsFullscreen(false);
       }
     } catch (error) {
@@ -142,55 +120,45 @@ function GameEmbed({ userId }: GameEmbedProps) {
     }
   };
 
+  // --- 6️⃣ Detecta cuando cambia el estado de pantalla completa (manual o automático) ---
   useEffect(() => {
     const handleFullscreenChange = () => {
-      const isCurrentlyFullscreen = !!(
-        document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).mozFullScreenElement
-      );
-      setIsFullscreen(isCurrentlyFullscreen);
-      setTimeout(() => updateScale(), 120);
+      const isFS = !!document.fullscreenElement;
+      setIsFullscreen(isFS);
+      setTimeout(updateScale, 120); // reajusta el tamaño después de entrar/salir del modo fullscreen
     };
-
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange as any);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange as any);
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange as any);
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange as any);
     };
   }, []);
 
-  useEffect(() => {
-    updateScale();
-    window.addEventListener('resize', updateScale);
-    window.addEventListener('orientationchange', updateScale);
-    return () => {
-      window.removeEventListener('resize', updateScale);
-      window.removeEventListener('orientationchange', updateScale);
-    };
-  }, [isFullscreen, isMobile, isPortrait]);
-
+  // --- 7️⃣ URL del juego ---
+  // Aquí se pasa el ID del usuario como parámetro (uid), que el juego puede leer desde el query string.
+  // Ejemplo: /GAME2/index.html?uid=123
   const gameUrl = `/GAME2/index.html?uid=${userId}`;
 
+  // --- 8️⃣ Renderizado del componente ---
   return (
     <div
-      ref={fullscreenContainerRef}
       style={{
-        width: '100%',
-        maxWidth: '1400px',
-        margin: '0 auto',
-        padding: '12px',
-        boxSizing: 'border-box',
-        position: 'relative',
+        width: '100vw',
+        minHeight: isFullscreen ? '100vh' : undefined,
         background: '#000',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: isFullscreen ? 'center' : 'flex-start',
+        position: 'relative',
         borderRadius: isFullscreen ? '0' : '12px',
+        padding: isFullscreen ? '0' : '12px',
+        boxSizing: 'border-box',
       }}
     >
+      {/* 🔹 Cabecera visible solo fuera del fullscreen */}
       {!isFullscreen && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', marginBottom: '8px', width: '100%', maxWidth: nativeWidth }}>
           <h1 style={{ fontSize: '20px', margin: 0 }}>🎮 NOSACQ-50</h1>
           <span style={{ background: 'rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: 16 }}>
             ID: {userId}
@@ -198,6 +166,7 @@ function GameEmbed({ userId }: GameEmbedProps) {
         </div>
       )}
 
+      {/* 🔸 Mensaje de rotación solo para móviles en vertical */}
       {isMobile && isPortrait && !isFullscreen && (
         <div
           style={{
@@ -208,6 +177,7 @@ function GameEmbed({ userId }: GameEmbedProps) {
             marginBottom: 12,
             textAlign: 'center',
             color: '#ffc107',
+            maxWidth: nativeWidth,
           }}
         >
           <span style={{ fontSize: '32px', display: 'block' }}>📱 ↻</span>
@@ -217,69 +187,59 @@ function GameEmbed({ userId }: GameEmbedProps) {
         </div>
       )}
 
-      <button
-        onClick={toggleFullscreen}
-        style={{
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          zIndex: 10000,
-          width: '42px',
-          height: '42px',
-          background: isFullscreen ? 'rgba(255,77,77,0.8)' : 'rgba(255,255,255,0.15)',
-          borderRadius: '8px',
-          border: 'none',
-          color: '#fff',
-          fontSize: '20px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backdropFilter: 'blur(4px)',
-          transition: 'background 0.3s',
-        }}
-      >
-        {isFullscreen ? '✕' : '⛶'}
-      </button>
-
+      {/* 🔹 Contenedor principal del juego */}
       <div
         ref={containerRef}
         style={{
-          position: 'relative',
-          overflow: 'hidden',
-          backgroundColor: '#000',
           margin: '0 auto',
+          marginBottom: '24px', // espacio para el botón de fullscreen
+          borderRadius: isFullscreen ? '0' : '12px',
+          boxShadow: !isFullscreen ? '0 4px 24px rgba(0,0,0,0.25)' : undefined,
+          background: '#000',
+          maxWidth: '100vw',
+          maxHeight: '100vh',
+          position: 'relative',
         }}
       >
-        <div
-          ref={wrapperRef}
+        {/* 🔸 Iframe del juego GameMaker */}
+        <iframe
+          ref={iframeRef}
+          src={gameUrl} // ← aquí se pasa el userId al juego
+          title="NOSACQ-50"
+          allow="autoplay; fullscreen"
+          sandbox="allow-scripts allow-same-origin allow-forms"
+          scrolling="no"
+        />
+      </div>
+
+      {/* 🔘 Botón de pantalla completa */}
+      <div style={{
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        marginBottom: '8px',
+      }}>
+        <button
+          onClick={toggleFullscreen}
           style={{
-            overflow: 'hidden',
-            position: 'relative',
-            width: `${nativeWidth}px`,
-            height: `${nativeHeight}px`,
-            transformOrigin: 'top left',
+            width: '54px',
+            height: '54px',
+            background: isFullscreen ? 'rgba(255,77,77,0.8)' : 'rgba(255,255,255,0.15)',
+            borderRadius: '50%',
+            border: 'none',
+            color: '#fff',
+            fontSize: '28px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.18)',
+            backdropFilter: 'blur(4px)',
+            transition: 'background 0.3s',
           }}
         >
-          <iframe
-            ref={iframeRef}
-            src={gameUrl}
-            style={{
-              width: `${nativeWidth}px`,
-              height: `${nativeHeight}px`,
-              border: 'none',
-              display: 'block',
-              background: '#000',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-            }}
-            title="NOSACQ-50"
-            allow="autoplay; fullscreen"
-            sandbox="allow-scripts allow-same-origin allow-forms"
-            scrolling="no"
-          />
-        </div>
+          {isFullscreen ? '✕' : '⛶'}
+        </button>
       </div>
     </div>
   );
