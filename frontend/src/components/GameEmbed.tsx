@@ -120,7 +120,7 @@ function GameEmbed({ userId }: GameEmbedProps) {
     }
   };
 
-  // --- 6️⃣ Detecta cuando cambia el estado de pantalla completa (manual o automático) ---
+  // --- Detecta cuando cambia el estado de pantalla completa (manual o automático) ---
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isFS = !!document.fullscreenElement;
