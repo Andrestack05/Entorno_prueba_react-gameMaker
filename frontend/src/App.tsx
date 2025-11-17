@@ -1,187 +1,314 @@
 import { useState } from 'react';
 import GameEmbed from './components/GameEmbed';
+import './App.css';
+
+// Interfaz para almacenar los datos del formulario
+interface UserFormData {
+  email: string;
+  gender: 1 | 2 | null;
+  role: 1 | 2 | null;
+  age: string; // Fecha de nacimiento en formato YYYY-MM-DD
+}
+
+// Interfaz para los datos que envía el juego al completar preguntas
+interface GameResultsPayload {
+  user_id: number;
+  is_partial: boolean;
+  total_questions: number;
+  answered_questions: number;
+  responses: Array<{
+    question_number: number;
+    value: number;
+  }>;
+}
 
 function App() {
-  // manejar userId como number | '' para evitar comparaciones raras
-  const [userId, setUserId] = useState<number | ''>('');
+  // Estado que almacena los datos del formulario
+  const [formData, setFormData] = useState<UserFormData>({
+    email: '',
+    gender: null,
+    role: null,
+    age: ''
+  });
+  
+  // Identificador generado para el usuario (simulado o devuelto por backend)
+  const [userId, setUserId] = useState<number | null>(null);
+
+  // Controla si el usuario ya inició el cuestionario
   const [gameStarted, setGameStarted] = useState(false);
 
-  const handleStartGame = () => {
-    if (userId !== '' && userId > 0) {
-      setGameStarted(true);
-    } else {
-      alert('Por favor ingresa un ID válido');
+  // Indica si el sistema está esperando respuesta del "backend"
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Guarda los últimos resultados enviados desde el juego
+  const [lastResults, setLastResults] = useState<GameResultsPayload | null>(null);
+
+  
+  // Función para calcular edad en años según la fecha de nacimiento
+  const calculateAge = (birthdate: string): number => {
+    const today = new Date();
+    const birth = new Date(birthdate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    // Se ajusta si el usuario aún no cumple años este año
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
     }
+    
+    return age;
   };
 
+  // Función que procesa los datos del formulario antes de iniciar el juego
+  const handleSubmitForm = async () => {
+    // Validaciones básicas del formulario
+    if (!formData.email || !formData.email.includes('@')) {
+      alert('Por favor ingresa un email válido');
+      return;
+    }
+    if (!formData.gender) {
+      alert('Por favor selecciona el género');
+      return;
+    }
+    if (!formData.role) {
+      alert('Por favor selecciona el rol');
+      return;
+    }
+    if (!formData.age) {
+      alert('Por favor selecciona la fecha de nacimiento');
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Se calcula la edad en años para enviar al servidor
+    const ageInYears = calculateAge(formData.age);
+
+    // Imprime el JSON que sería enviado al backend real
+    console.log('JSON enviado al backend:');
+    console.log(JSON.stringify({
+      email: formData.email,
+      gender: formData.gender,
+      role: formData.role,
+      age: ageInYears
+    }, null, 2));
+
+    // Simulación de tiempo de espera del backend
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Se genera un ID simulado ya que aún no existe backend real
+    const fakeId = Math.floor(Math.random() * 1000000);
+    console.log('ID simulado:', fakeId);
+    
+    // Se guarda el ID y se inicia el juego
+    setUserId(fakeId);
+    setGameStarted(true);
+    setIsLoading(false);
+
+    /*
+      Cuando el backend esté listo, se usará este bloque real:
+
+      try {
+        const response = await fetch('https://BACKEND.com/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.email,
+            gender: formData.gender,
+            role: formData.role,
+            age: calculateAge(formData.age)
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const receivedId = data.id || data.user_id;
+          
+          if (receivedId) {
+            setUserId(receivedId);
+            setGameStarted(true);
+          } else {
+            alert('Error: El backend no devolvió un ID válido');
+          }
+        } else {
+          const errorData = await response.json();
+          alert('Error: ' + (errorData.message || response.statusText));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión con el servidor');
+      } finally {
+        setIsLoading(false);
+      }
+    */
+  };
+
+  // Función que recibe los resultados enviados por el juego (parciales o finales)
+  const handleGameResults = async (data: GameResultsPayload) => {
+    console.log("Resultados recibidos:", data);
+    setLastResults(data);
+
+    // En esta versión, los datos solo se imprimen y no se envían aún
+    console.log("Datos que se enviarían al backend:", data);
+    
+    // Si el cuestionario terminó se muestra una alerta de finalización
+    if (!data.is_partial) {
+      alert("Cuestionario completado! (modo prueba)");
+    }
+
+    /*
+      Código real a usar con backend:
+
+      try {
+        const response = await fetch('https://BACKEND.com/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        if (response.ok) {
+          if (!data.is_partial) {
+            alert('Cuestionario completado');
+          }
+        } else {
+          alert('Error al guardar los resultados');
+        }
+      } catch (error) {
+        alert('Error de conexión');
+      }
+    */
+  };
+
+  // Restablece el formulario y reinicia el estado del juego
   const handleReset = () => {
     setGameStarted(false);
-    setUserId('');
+    setUserId(null);
+    setFormData({ email: '', gender: null, role: null, age: '' });
+    setLastResults(null);
   };
 
-  if (gameStarted) {
+  // Si el juego ya inició y existe userId, se muestra el modo de juego
+  if (gameStarted && userId) {
     return (
-      <div style={styles.playWrap}>
-        <GameEmbed userId={userId} />
-        <div style={styles.resetContainer}>
-          <button onClick={handleReset} style={styles.resetButton}>
-            🔄 Reiniciar con otro usuario
+      <div className="play-wrap">
+        <GameEmbed userId={userId} onGameResults={handleGameResults} />
+        
+        {lastResults && (
+          <div className="debug-panel">
+            <h3>Últimos datos recibidos:</h3>
+            <pre className="debug-pre">
+              {JSON.stringify(lastResults, null, 2)}
+            </pre>
+          </div>
+        )}
+
+        <div className="reset-container">
+          <button onClick={handleReset} className="reset-button">
+            Reiniciar
           </button>
         </div>
       </div>
     );
   }
 
+  // Vista del formulario antes de iniciar el juego
   return (
-    <div style={styles.appWrap}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>🎮 NOSACQ-50</h1>
-        <h2 style={styles.subtitle}>Cuestionario de Seguridad Gamificado</h2>
+    <div className="app-wrap">
+      <div className="card">
+        <h1 className="title">NOSACQ-50</h1>
+        <h2 className="subtitle">Cuestionario de Seguridad Gamificado</h2>
         
-        <div style={styles.infoBox}>
-          <h3 style={{marginTop:0}}>📋 Instrucciones:</h3>
-          <ul style={styles.list}>
-            <li>Ingresa el ID del usuario</li>
-            <li>Completa las 50 preguntas en el juego</li>
-            <li>Los resultados se enviarán automáticamente</li>
-          </ul>
+        <div className="info-box">
+          <h3>Antes de comenzar:</h3>
+          <p>Completa tus datos para iniciar el cuestionario</p>
         </div>
 
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>ID del Usuario:</label>
+        <div className="input-group">
+          <label className="label">Correo Electrónico:</label>
           <input
-            type="number"
-            value={userId === '' ? '' : String(userId)}
-            onChange={(e) => setUserId(e.target.value === '' ? '' : Number(e.target.value))}
-            placeholder="Ej: 12345"
-            style={styles.input}
-            onKeyPress={(e) => e.key === 'Enter' && handleStartGame()}
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({...formData, email: e.target.value})}
+            placeholder="ejemplo@correo.com"
+            className="input"
+            disabled={isLoading}
           />
         </div>
 
-        <button onClick={handleStartGame} style={styles.button}>
-          🚀 Iniciar Juego
+        <div className="input-group">
+          <label className="label">Género:</label>
+          <div className="checkbox-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={formData.gender === 1}
+                onChange={() => setFormData({...formData, gender: 1})}
+                className="checkbox"
+                disabled={isLoading}
+              />
+              <span className="checkbox-text">Hombre</span>
+            </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={formData.gender === 2}
+                onChange={() => setFormData({...formData, gender: 2})}
+                className="checkbox"
+                disabled={isLoading}
+              />
+              <span className="checkbox-text">Mujer</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="input-group">
+          <label className="label">Rol:</label>
+          <div className="checkbox-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={formData.role === 1}
+                onChange={() => setFormData({...formData, role: 1})}
+                className="checkbox"
+                disabled={isLoading}
+              />
+              <span className="checkbox-text">Trabajador</span>
+            </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={formData.role === 2}
+                onChange={() => setFormData({...formData, role: 2})}
+                className="checkbox"
+                disabled={isLoading}
+              />
+              <span className="checkbox-text">Líder</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="input-group">
+          <label className="label">Fecha de Nacimiento:</label>
+          <input
+            type="date"
+            value={formData.age}
+            onChange={(e) => setFormData({...formData, age: e.target.value})}
+            className="input-date"
+            max={new Date().toISOString().split('T')[0]}
+            disabled={isLoading}
+          />
+        </div>
+
+        <button 
+          onClick={handleSubmitForm} 
+          className="button"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Registrando...' : 'Iniciar Cuestionario'}
         </button>
       </div>
     </div>
   );
 }
-
-const styles: any = {
-  appWrap: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '40px',
-    boxSizing: 'border-box',
-    backgroundImage:
-      'radial-gradient( circle at 10% 20%, rgba(255,255,255,0.02), transparent 10% ),' +
-      'linear-gradient(135deg, #0f1724 0%, #0b1220 50%, #071025 100%)',
-    backgroundAttachment: 'fixed'
-  },
-  // layout para cuando el juego está iniciado: columna y centrado
-  playWrap: {
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    gap: 20,
-    padding: '40px',
-    boxSizing: 'border-box',
-    backgroundImage:
-      'radial-gradient( circle at 10% 20%, rgba(255,255,255,0.02), transparent 10% ),' +
-      'linear-gradient(135deg, #0f1724 0%, #0b1220 50%, #071025 100%)',
-  },
-  card: {
-    width: '100%',
-    maxWidth: '560px',
-    padding: '34px',
-    borderRadius: '16px',
-    boxShadow: '0 12px 40px rgba(2,6,23,0.7), inset 0 1px 0 rgba(255,255,255,0.02)',
-    background: 'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02))',
-    border: '1px solid rgba(255,255,255,0.04)',
-    color: '#e6eef8',
-    fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
-    textAlign: 'center'
-  },
-  title: {
-    color: '#ffd166',
-    fontSize: '34px',
-    margin: '0 0 6px 0',
-    textShadow: '0 2px 8px rgba(0,0,0,0.6)'
-  },
-  subtitle: {
-    color: '#cbd7ee',
-    fontSize: '15px',
-    margin: '0 0 20px 0',
-    fontWeight: 500
-  },
-  infoBox: {
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    padding: '14px',
-    borderRadius: '10px',
-    marginBottom: '22px',
-    border: '1px solid rgba(255,255,255,0.02)',
-    textAlign: 'left'
-  },
-  list: {
-    margin: '10px 0 0 18px',
-    padding: 0,
-    color: '#dbe8ff'
-  },
-  inputGroup: {
-    marginBottom: '20px',
-    textAlign: 'left'
-  },
-  label: {
-    display: 'block',
-    marginBottom: '8px',
-    fontWeight: 600,
-    color: '#e6eef8'
-  },
-  input: {
-    width: '100%',
-    padding: '12px 14px',
-    fontSize: '15px',
-    borderRadius: '10px',
-    border: '1px solid rgba(255,255,255,0.06)',
-    background: 'rgba(0,0,0,0.35)',
-    color: '#e6eef8',
-    outline: 'none',
-    boxSizing: 'border-box'
-  },
-  button: {
-    width: '100%',
-    padding: '14px',
-    fontSize: '16px',
-    fontWeight: 700,
-    color: '#081224',
-    background: 'linear-gradient(90deg, #ffd166 0%, #ff7a59 100%)',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    boxShadow: '0 8px 18px rgba(255,121,78,0.18), inset 0 -2px 0 rgba(0,0,0,0.08)'
-  },
-  resetContainer: {
-    width: '100%',
-    maxWidth: '960px',
-    display: 'flex',
-    justifyContent: 'center',
-    marginTop: 8
-  },
-  resetButton: {
-    padding: '12px 30px',
-    fontSize: '16px',
-    fontWeight: '700',
-    color: '#081224',
-    backgroundColor: '#ffd166',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    boxShadow: '0 8px 18px rgba(0,0,0,0.12)'
-  }
-};
 
 export default App;

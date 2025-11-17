@@ -1,42 +1,276 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* Reset y estilos base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Contenedor principal - Formulario */
+.app-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background-image: radial-gradient(
+      circle at 10% 20%,
+      rgba(255, 255, 255, 0.02),
+      transparent 10%
+    ),
+    linear-gradient(135deg, #0f1724 0%, #0b1220 50%, #071025 100%);
+  background-attachment: fixed;
+}
+
+/* Contenedor cuando el juego está activo */
+.play-wrap {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  padding: 40px 20px;
+  background-image: radial-gradient(
+      circle at 10% 20%,
+      rgba(255, 255, 255, 0.02),
+      transparent 10%
+    ),
+    linear-gradient(135deg, #0f1724 0%, #0b1220 50%, #071025 100%);
+}
+
+/* Tarjeta del formulario */
+.card {
+  width: 100%;
+  max-width: 560px;
+  padding: 34px;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(2, 6, 23, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  color: #e6eef8;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Títulos */
+.title {
+  color: #ffd166;
+  font-size: 34px;
+  margin: 0 0 6px 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.subtitle {
+  color: #cbd7ee;
+  font-size: 15px;
+  margin: 0 0 20px 0;
+  font-weight: 500;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Caja de información */
+.info-box {
+  background-color: rgba(255, 255, 255, 0.02);
+  padding: 14px;
+  border-radius: 10px;
+  margin-bottom: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  text-align: left;
 }
 
-.card {
-  padding: 2em;
+.info-box h3 {
+  margin-top: 0;
+  color: #e6eef8;
 }
 
-.read-the-docs {
-  color: #888;
+.info-box p {
+  margin: 8px 0;
+  color: #dbe8ff;
+}
+
+/* Grupos de inputs */
+.input-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #e6eef8;
+  font-size: 14px;
+}
+
+/* Inputs de texto y email */
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.35);
+  color: #e6eef8;
+  outline: none;
+  transition: border 0.3s;
+}
+
+.input:focus {
+  border-color: rgba(255, 209, 102, 0.4);
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Input de fecha */
+.input-date {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.35);
+  color: #e6eef8;
+  outline: none;
+  color-scheme: dark;
+  cursor: pointer;
+}
+
+.input-date:focus {
+  border-color: rgba(255, 209, 102, 0.4);
+}
+
+/* Grupo de checkboxes */
+.checkbox-group {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s;
+  flex: 1;
+  min-width: 120px;
+}
+
+.checkbox-label:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 209, 102, 0.3);
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: #ffd166;
+}
+
+.checkbox-text {
+  color: #e6eef8;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Botón principal */
+.button {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #081224;
+  background: linear-gradient(90deg, #ffd166 0%, #ff7a59 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(255, 121, 78, 0.18),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Contenedor del botón de reset */
+.reset-container {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.reset-button {
+  padding: 12px 30px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #081224;
+  background-color: #ffd166;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s;
+}
+
+.reset-button:hover {
+  transform: translateY(-2px);
+}
+
+/* Panel de debug */
+.debug-panel {
+  width: 100%;
+  max-width: 960px;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #e6eef8;
+  font-family: monospace;
+}
+
+.debug-panel h3 {
+  margin: 0 0 10px 0;
+  color: #ffd166;
+}
+
+.debug-pre {
+  margin: 0;
+  padding: 12px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  font-size: 12px;
+  overflow: auto;
+  max-height: 300px;
+  color: #a8dadc;
 }
