@@ -40,7 +40,7 @@ El servidor se iniciará en `http://localhost:5173` (o el primer puerto disponib
 ## Estructura
 
 - `/frontend/` - Aplicación React
-- `/frontend/public/NOSACQ-50-GAME/` - Juego exportado desde GameMaker
+- `/frontend/public/GAME2/` - Juego exportado desde GameMaker
 - `/frontend/src/App.tsx` - Componente principal con integración del juego
 
 ## Notas

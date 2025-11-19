@@ -106,7 +106,7 @@ function App() {
     setIsLoading(false);
 
     /*
-      Cuando el backend esté listo, se usará este bloque real:
+      Cuando el backend esté listo, se usa este bloque real:
 
       try {
         const response = await fetch('https://BACKEND.com/api/register', {
@@ -157,7 +157,7 @@ function App() {
     }
 
     /*
-      Código real a usar con backend:
+      Código real al usar con backend:
 
       try {
         const response = await fetch('https://BACKEND.com/api/submit', {
@@ -216,7 +216,11 @@ function App() {
     <div className="app-wrap">
       <div className="card">
         <h1 className="title">NOSACQ-50</h1>
-        <h2 className="subtitle">Cuestionario de Seguridad Gamificado</h2>
+        <img 
+           src="/thePlayToolsLogo.png" 
+            alt="The Play Tools Logo" 
+             className="logo"
+          />
         
         <div className="info-box">
           <h3>Antes de comenzar:</h3>

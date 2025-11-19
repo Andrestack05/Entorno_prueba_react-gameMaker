@@ -65,7 +65,7 @@ body {
 
 /* Títulos */
 .title {
-  color: #ffd166;
+  color: #ff6666;
   font-size: 34px;
   margin: 0 0 6px 0;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
@@ -273,4 +273,12 @@ body {
   overflow: auto;
   max-height: 300px;
   color: #a8dadc;
+}
+
+.logo {
+  width: 280px;
+  max-width: 80%;
+  height: auto;
+  display: block;
+  margin: 0 auto 20px auto;
 }
