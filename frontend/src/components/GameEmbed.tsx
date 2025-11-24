@@ -271,6 +271,15 @@ function GameEmbed({ userId, onGameResults }: GameEmbedProps) {
           allow="autoplay; fullscreen"
           sandbox="allow-scripts allow-same-origin allow-forms"
           scrolling="no"
+          style={{
+    width: "100%",
+    height: "100vh",
+    border: "none",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    WebkitTouchCallout: "none",
+    touchAction: "none",
+  }}
         />
       </div>
 
