@@ -1,131 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="utf-8" />
 
-    <!-- Custom PreHead code is injected here -->
-    
+    <meta
+      name="viewport"
+      content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
 
-    <head>
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name ="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta charset="utf-8"/>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
 
-        <!-- Builtin injector for disabling cache -->
-        <meta http-equiv="pragma" content="no-cache"/>
+    <meta http-equiv="pragma" content="no-cache" />
 
-        <!-- Set the title bar of the page -->
-        <title>NOSACQ50-GAME</title>
+    <title>NOSACQ50-GAME</title>
 
-        <!-- Custom PreStyle code is injected here -->
-        
+    <style>
+      /* 🔥 FIX 2: Estilos "Nucleares" para bloquear selección y menús en iOS */
+      html,
+      body {
+        background: #000000; /* Corregido de #0 a #000000 */
+        color: #cccccc;
+        margin: 0px;
+        padding: 0px;
+        border: 0px;
+        width: 100%;
+        height: 100%;
+        overflow: hidden; /* Evita rebote de scroll */
+        overscroll-behavior: none; /* Bloquea el efecto elástico en iOS */
+      }
 
-        <!-- Set the background colour of the document -->
-        <style>
-            body {
-                background: #0;
-                color: #cccccc;
-                margin: 0px;
-                padding: 0px;
-                border: 0px;
-            }
+      /* Reglas para TODO elemento: No seleccionar, no menú contextual, no azul al tocar */
+      canvas,
+      div,
+      body,
+      html {
+        -webkit-touch-callout: none !important; /* La clave para el "toque sostenido" */
+        -webkit-user-select: none !important; /* Safari */
+        -khtml-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+        -webkit-tap-highlight-color: transparent !important; /* Quita el cuadro azul */
+        touch-action: none !important; /* Le dice al navegador: "esto es un juego, no hagas gestos" */
+        outline: none !important;
+      }
 
-            canvas {
-                image-rendering: optimizeSpeed;
-                -webkit-interpolation-mode: nearest-neighbor;
-                -ms-touch-action: none;
-                touch-action: none;
-                margin: 0px;
-                padding: 0px;
-                border: 0px;
-            }
-            :-webkit-full-screen #canvas {
-                width: 100%;
-                height: 100%;
-            }
-            :-webkit-full-screen {
-                width: 100%;
-                height: 100%;
-            }
-            
-            /* Custom Runner Styles */
-            div.gm4html5_div_class {
-                margin: 0px;
-                padding: 0px;
-                border: 0px;
-            }
-            div.gm4html5_login {
-                padding: 20px;
-                position: absolute;
-                border: solid 2px #000000;
-                background-color: #404040;
-                color:#00ff00;
-                border-radius: 15px;
-                box-shadow: #101010 20px 20px 40px;
-            }
-            div.gm4html5_cancel_button {
-                float: right;
-            }
-            div.gm4html5_login_button {
-                float: left;
-            }
-            div.gm4html5_login_header {
-                text-align: center;
-            }
-            /* END - Custom Runner Styles */
-            
-        </style>
+      canvas {
+        image-rendering: optimizeSpeed;
+        -webkit-interpolation-mode: nearest-neighbor;
+        -ms-touch-action: none;
+        touch-action: none;
+        margin: 0px;
+        padding: 0px;
+        border: 0px;
 
-        <!-- Custom PostStyle code is injected here -->
-        
+        /* Centrado absoluto para asegurar que se vea bien en móviles */
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
 
-        <!-- Builtin injector for injecting flurry analytics code -->
-        
-    </head>
+      :-webkit-full-screen #canvas {
+        width: 100%;
+        height: 100%;
+      }
 
-    <!-- Custom PostHead code is injected here -->
-    
+      div.gm4html5_div_class {
+        margin: 0px;
+        padding: 0px;
+        border: 0px;
+        width: 100%;
+        height: 100%;
+      }
 
-    <!-- Custom PreBody code is injected here -->
-    
+      /* Estilos originales de carga (Mantenidos) */
+      div.gm4html5_login {
+        padding: 20px;
+        position: absolute;
+        border: solid 2px #000000;
+        background-color: #404040;
+        color: #00ff00;
+        border-radius: 15px;
+        box-shadow: #101010 20px 20px 40px;
+      }
+      div.gm4html5_cancel_button {
+        float: right;
+      }
+      div.gm4html5_login_button {
+        float: left;
+      }
+      div.gm4html5_login_header {
+        text-align: center;
+      }
+    </style>
+  </head>
 
-    <body>
-        <!-- Custom BodyStart code is injected here -->
-        
+  <body>
+    <div class="gm4html5_div_class" id="gm4html5_div_id">
+      <canvas id="canvas" width="1440" height="780">
+        <p>Your browser doesn't support HTML5 canvas.</p>
+      </canvas>
+    </div>
 
-        <div class="gm4html5_div_class" id="gm4html5_div_id">
-            
-            <!-- Builtin injector for splash screen -->
-            
+    <script
+      type="text/javascript"
+      src="html5game/NOSACQ-50-GAME.js?cachebust=906842986"
+    ></script>
 
-            <!-- Custom PreCanvas code is injected here -->
-            
+    <script>
+      // Iniciar GameMaker
+      window.onload = GameMaker_Init;
+    </script>
 
-            <!-- Create the canvas element the game draws to -->
-            <canvas id="canvas" width="1440" height="780" >
-                
-                <p>Your browser doesn't support HTML5 canvas.</p>
-            </canvas>
-            
-            <!-- Custom PostCanvas code is injected here -->
-            
-        </div>
+    <script>
+      // Bloquear menú contextual (clic derecho / toque sostenido)
+      window.addEventListener(
+        "contextmenu",
+        function (e) {
+          e.preventDefault();
+          return false;
+        },
+        { passive: false }
+      );
 
-        <!-- Run the game code -->
-        <script type="text/javascript" src="html5game/NOSACQ-50-GAME.js?cachebust=906842986"></script>
+      // Bloquear inicio de selección de texto
+      window.addEventListener(
+        "selectstart",
+        function (e) {
+          e.preventDefault();
+          return false;
+        },
+        { passive: false }
+      );
 
-        <!-- Builtin injector for injecting runner path -->
-        
+      // Bloquear arrastre de imágenes (el canvas)
+      window.addEventListener(
+        "dragstart",
+        function (e) {
+          e.preventDefault();
+          return false;
+        },
+        { passive: false }
+      );
 
-        <script>window.onload = GameMaker_Init;</script>
+      // Bloquear zoom con pellizco (pinch zoom)
+      window.addEventListener(
+        "gesturestart",
+        function (e) {
+          e.preventDefault();
+        },
+        { passive: false }
+      );
+    </script>
 
-        <!-- Builtin injector for injecting google analytics code -->
-        
+    <script>
+      /**
+       * Intenta reanudar el contexto de audio. Esto es necesario en iOS/Safari
+       * y Chrome móvil debido a las políticas de Autoplay.
+       */
+      function tryUnlockAudio() {
+          // Obtenemos el contexto de audio del navegador (es una API estándar)
+          const audioContext = window.AudioContext || (window as any).webkitAudioContext;
 
-        <!-- Custom BodyEnd code is injected here -->
-        
-    </body>
+          if (audioContext) {
+              // Creamos un contexto temporal si aún no existe o usamos el global
+              const context = audioContext.name === 'AudioContext'
+                  ? new audioContext()
+                  : window.gml_AudioContext || new audioContext();
 
-    <!-- Custom PostBody code is injected here -->
-    
+              // Si el contexto está suspendido (el estado por defecto en muchos móviles)
+              if (context.state === 'suspended') {
+                  context.resume().then(() => {
+                      console.log('✅ Contexto de Audio Reanudado!');
+                      // Eliminamos el listener una vez que la acción fue exitosa
+                      document.removeEventListener('click', tryUnlockAudio);
+                      document.removeEventListener('touchstart', tryUnlockAudio);
+                      document.removeEventListener('keydown', tryUnlockAudio);
+                  }).catch(error => {
+                      console.warn("Fallo al reanudar el AudioContext:", error);
+                  });
+              } else {
+                  // Si ya está activo, quitamos los listeners para evitar llamadas redundantes
+                  document.removeEventListener('click', tryUnlockAudio);
+                  document.removeEventListener('touchstart', tryUnlockAudio);
+                  document.removeEventListener('keydown', tryUnlockAudio);
+              }
+          } else {
+               // Si el navegador no soporta Web Audio API (muy raro hoy en día)
+               document.removeEventListener('click', tryUnlockAudio);
+               document.removeEventListener('touchstart', tryUnlockAudio);
+               document.removeEventListener('keydown', tryUnlockAudio);
+          }
+      }
+
+      // Escuchamos el primer evento de usuario
+      document.addEventListener('click', tryUnlockAudio, { once: true });
+      document.addEventListener('touchstart', tryUnlockAudio, { once: true });
+      document.addEventListener('keydown', tryUnlockAudio, { once: true }); // Para desktop
+    </script>
+  </body>
 </html>
